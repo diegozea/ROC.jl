@@ -1,4 +1,4 @@
-![The Book of Knowledge, The Grolier Society, 1911](hhttps://dl.dropboxusercontent.com/u/6948655/ROC.jpg)
+![The Book of Knowledge, The Grolier Society, 1911](https://dl.dropboxusercontent.com/u/6948655/ROC.jpg)
 
 [![Build Status](https://travis-ci.org/diegozea/ROC.jl.svg)](https://travis-ci.org/diegozea/ROC.jl)
 
@@ -25,6 +25,6 @@ This functions return a ```ROCData``` object
 
 # Example
 
-![Example](https://www.dropbox.com/s/v7xen8cwunwt8p4/ROC.png)
+![Example](https://dl.dropboxusercontent.com/u/6948655/ROC.png)
 
 
