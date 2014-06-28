@@ -1,5 +1,5 @@
+julia 0.3-
 Winston
 DataArrays
 DataFrames
-VERSION < v"0.3-"
 
