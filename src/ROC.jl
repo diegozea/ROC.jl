@@ -1,5 +1,5 @@
 module ROC
-	
+
 	using DataArrays
 	using Winston
 
@@ -11,7 +11,7 @@ module ROC
 		plot
 
 	include("rocdata.jl")
-	include("roc.jl")
+	include("roc_main.jl")
 	include("rocplot.jl")
 
 end # module
