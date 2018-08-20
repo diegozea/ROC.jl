@@ -1,6 +1,6 @@
 ## Data Preparation for ROC Analysis
 
-immutable _PreparedROCData{T<:Real}
+struct _PreparedROCData{T<:Real}
 	scores::Vector{T}
 	labels::BitVector
 end
@@ -14,7 +14,7 @@ function _create_preparedrocdata(scores, labels, reverseordered::Bool)
 	end
 end
 
-function _vector2labels{T<:Any}(labels::Vector{T},truelabel::T)
+function _vector2labels(labels::Vector{T},truelabel::T) where T
 	if length(unique(labels)) == 2 && truelabel in labels
 		labels .== truelabel
 	else
@@ -22,7 +22,7 @@ function _vector2labels{T<:Any}(labels::Vector{T},truelabel::T)
 	end
 end
 
-function _preparedrocdata{T<:Real}(scores::Vector{T}, labels::BitVector, reverseordered::Bool)
+function _preparedrocdata(scores::Vector{T}, labels::BitVector, reverseordered::Bool) where T <: Real
 	if length(scores) == length(labels)
 		_create_preparedrocdata(scores,labels,reverseordered)
 	else
@@ -30,7 +30,7 @@ function _preparedrocdata{T<:Real}(scores::Vector{T}, labels::BitVector, reverse
 	end
 end
 
-function _preparedrocdata{T<:Real,L<:Any}(scores::Vector{T}, labels::Vector{L}, truelabel::L, reverseordered::Bool)
+function _preparedrocdata(scores::Vector{T}, labels::Vector{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
 	if length(scores) == length(labels)
 		bitlabels = _vector2labels(labels,truelabel)
 		_create_preparedrocdata(scores,bitlabels,reverseordered)
@@ -41,7 +41,7 @@ end
 
 ## using DataArrays
 
-function _vector2labels{T<:Any}(labels::PooledDataArray{T},truelabel::T)
+function _vector2labels(labels::PooledDataArray{T},truelabel::T) where T
 	indexvalue = findin(labels.pool,[truelabel])[1]
 	if length(labels.pool) == 2 && indexvalue != 0
 		labels.refs .== indexvalue
@@ -50,8 +50,8 @@ function _vector2labels{T<:Any}(labels::PooledDataArray{T},truelabel::T)
 	end
 end
 
-function _preparedrocdata{T<:Real,L<:Any}(scores::Vector{T}, labels::PooledDataArray{L}, truelabel::L, reverseordered::Bool)
-	na = isna(labels)
+function _preparedrocdata(scores::Vector{T}, labels::PooledDataArray{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
+	na = ismissing.(labels)
 	if length(scores) == length(labels)
 		bitlabels = _vector2labels(labels,truelabel)
 		_create_preparedrocdata(scores[!na],bitlabels[!na],reverseordered)
@@ -60,17 +60,18 @@ function _preparedrocdata{T<:Real,L<:Any}(scores::Vector{T}, labels::PooledDataA
 	end
 end
 
-function _preparedrocdata{T<:Real,L<:Any}(scores::DataArray{T}, labels::DataArray{L}, truelabel::L, reverseordered::Bool)
-	na = isna(labels) | isna(scores)
+function _preparedrocdata(scores::DataArray{T}, labels::DataArray{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
+	na = ismissing.(labels) | ismissing.(scores)
 	_preparedrocdata(convert(Vector{T},scores[!na]),convert(Vector{L},labels[!na]),truelabel,reverseordered)
 end
 
-function _preparedrocdata{T<:Real,L<:Any}(scores::DataArray{T}, labels::PooledDataArray{L}, truelabel::L, reverseordered::Bool)
-	na = isna(labels) | isna(scores)
+function _preparedrocdata(scores::DataArray{T}, labels::PooledDataArray{L}, truelabel::L,
+                          reverseordered::Bool) where {T<:Real,L}
+	na = ismissing.(labels) | ismissing.(scores)
 	_preparedrocdata(convert(Vector{T},scores[!na]),labels[!na],truelabel,reverseordered)
 end
 
-immutable ROCData{T<:Real}
+struct ROCData{T<:Real}
 	scores::Vector{T}
 	labels::BitVector
 	P::Int
@@ -90,12 +91,12 @@ function roc(_preparedrocdata::_PreparedROCData)
 	n = length(_preparedrocdata.labels)
 	N = n - P
 	ni = 1:(n-1)
-	TP = Array(Int,ni.stop)
-	TN = Array(Int,ni.stop)
-	FP = Array(Int,ni.stop)
-	FN = Array(Int,ni.stop)
-	FPR = Array(Float64,ni.stop)
-	TPR = Array(Float64,ni.stop)
+	TP = Array{Int}(ni.stop)
+	TN = Array{Int}(ni.stop)
+	FP = Array{Int}(ni.stop)
+	FN = Array{Int}(ni.stop)
+	FPR = Array{Float64}(ni.stop)
+	TPR = Array{Float64}(ni.stop)
 	for i in ni
 		Pi = sum(_preparedrocdata.labels[1:i])
 		TP[i] = Pi
@@ -108,10 +109,8 @@ function roc(_preparedrocdata::_PreparedROCData)
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
 end
 
-roc{T<:Real}(scores::Vector{T}, labels::BitVector; reverseordered::Bool=false) = roc( _preparedrocdata(scores, labels, reverseordered) )
-roc{T<:Real,L<:Any}(scores::Vector{T}, labels::Vector{L}, truelabel::L; reverseordered::Bool=false) = roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
-roc{T<:Real,L<:Any}(scores::Vector{T}, labels::PooledDataArray{L}, truelabel::L; reverseordered::Bool=false) = roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
-roc{T<:Real,L<:Any}(scores::DataArray{T}, labels::DataArray{L}, truelabel::L; reverseordered::Bool=false) = roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
-roc{T<:Real,L<:Any}(scores::DataArray{T}, labels::PooledDataArray{L}, truelabel::L; reverseordered::Bool=false) = roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
-
+roc(scores::AbstractVector{T}, labels::BitVector; reverseordered::Bool=false) where T <: Real =
+    roc( _preparedrocdata(scores, labels, reverseordered) )
+roc(scores::AbstractVector{T}, labels::AbstractVector{L}, truelabel::L; reverseordered::Bool=false) where {T<:Real, L} =
+    roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
 
