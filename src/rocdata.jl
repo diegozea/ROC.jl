@@ -14,61 +14,20 @@ function _create_preparedrocdata(scores, labels, reverseordered::Bool)
 	end
 end
 
-function _vector2labels(labels::Vector{T},truelabel::T) where T
-	if length(unique(labels)) == 2 && truelabel in labels
-		labels .== truelabel
-	else
-		error("labels needs two levels and truelabel should be one of the levels")
-	end
+function _vector2labels(labels, truelabel)
+    if length(unique(labels)) == 2 && truelabel in labels 
+	return labels .== truelabel
+    else
+	error("labels needs two levels and truelabel should be one of the levels")
+    end
 end
 
-function _preparedrocdata(scores::Vector{T}, labels::BitVector, reverseordered::Bool) where T <: Real
+function _preparedrocdata(scores, labels, reverseordered::Bool) 
 	if length(scores) == length(labels)
 		_create_preparedrocdata(scores,labels,reverseordered)
 	else
 		error("scores and labels should have the same length")
 	end
-end
-
-function _preparedrocdata(scores::Vector{T}, labels::Vector{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
-	if length(scores) == length(labels)
-		bitlabels = _vector2labels(labels,truelabel)
-		_create_preparedrocdata(scores,bitlabels,reverseordered)
-	else
-		error("scores and labels should have the same length")
-	end
-end
-
-## using DataArrays
-
-function _vector2labels(labels::PooledDataArray{T},truelabel::T) where T
-	indexvalue = findin(labels.pool,[truelabel])[1]
-	if length(labels.pool) == 2 && indexvalue != 0
-		labels.refs .== indexvalue
-	else
-		error("labels needs two levels and truelabel should be one of the levels")
-	end
-end
-
-function _preparedrocdata(scores::Vector{T}, labels::PooledDataArray{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
-	na = ismissing.(labels)
-	if length(scores) == length(labels)
-		bitlabels = _vector2labels(labels,truelabel)
-		_create_preparedrocdata(scores[!na],bitlabels[!na],reverseordered)
-	else
-		error("scores and labels should have the same length")
-	end
-end
-
-function _preparedrocdata(scores::DataArray{T}, labels::DataArray{L}, truelabel::L, reverseordered::Bool) where {T<:Real,L}
-	na = ismissing.(labels) | ismissing.(scores)
-	_preparedrocdata(convert(Vector{T},scores[!na]),convert(Vector{L},labels[!na]),truelabel,reverseordered)
-end
-
-function _preparedrocdata(scores::DataArray{T}, labels::PooledDataArray{L}, truelabel::L,
-                          reverseordered::Bool) where {T<:Real,L}
-	na = ismissing.(labels) | ismissing.(scores)
-	_preparedrocdata(convert(Vector{T},scores[!na]),labels[!na],truelabel,reverseordered)
 end
 
 struct ROCData{T<:Real}
@@ -109,8 +68,44 @@ function roc(_preparedrocdata::_PreparedROCData)
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
 end
 
-roc(scores::AbstractVector{T}, labels::BitVector; reverseordered::Bool=false) where T <: Real =
-    roc( _preparedrocdata(scores, labels, reverseordered) )
-roc(scores::AbstractVector{T}, labels::AbstractVector{L}, truelabel::L; reverseordered::Bool=false) where {T<:Real, L} =
-    roc( _preparedrocdata(scores, labels, truelabel, reverseordered) )
+# no missing values and bitvector labels:
+function roc(scores::AbstractVector{T}, labels::BitVector;
+             reverseordered::Bool=false) where T <: Real
+    return roc( _preparedrocdata(scores, labels, reverseordered) )
+end
+
+# no missing values (but labels not bitvector):
+function roc(scores::AbstractVector{T}, labels::AbstractVector{L},
+             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+    bit_labels = _vector2labels(labels, truelabel)
+    return roc( _preparedrocdata(scores, bit_labels, reverseordered) )
+end
+
+# missing labels:
+function roc(scores::AbstractVector{T}, labels::AbstractVector{Union{L, Missing}},
+             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+    good_indices = .!(ismissing.(labels))
+    bit_labels = _vector2labels(labels[good_indices], truelabel)
+    return roc( _preparedrocdata(scores[good_indices],
+                                 bit_labels, reverseordered) )
+end
+
+# missing scores:
+function roc(scores::AbstractVector{Union{T,Missing}}, labels::AbstractVector{L},
+             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+    good_indices = .!(ismissing.(scores))
+    bit_labels = _vector2labels(labels[good_indices], truelabel)
+    return roc( _preparedrocdata([scores[good_indices]...],
+                                 bit_labels, reverseordered) )
+end
+
+# missing labels and missing scores:
+function roc(scores::AbstractVector{Union{T,Missing}},
+             labels::AbstractVector{Union{L,Missing}},
+             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+    good_indices = .!( ismissing.(scores) .| ismissing.(labels) )
+    bit_labels = _vector2labels(labels[good_indices], truelabel)
+    return roc( _preparedrocdata([scores[good_indices]...],
+                                 bit_labels, reverseordered) )
+end
 

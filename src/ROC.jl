@@ -1,7 +1,6 @@
 module ROC
 
-        using DataArrays,
-              Missings
+        using Missings
     
 
 	export	ROCData,
