@@ -22,7 +22,7 @@ function _vector2labels(labels, truelabel)
     end
 end
 
-function _preparedrocdata(scores, labels, reverseordered::Bool) 
+function _preparedrocdata(scores, labels, reverseordered::Bool)
 	if length(scores) == length(labels)
 		_create_preparedrocdata(scores,labels,reverseordered)
 	else
