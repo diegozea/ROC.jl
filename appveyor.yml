@@ -11,9 +11,9 @@ platform:
 
 # # Uncomment the following lines to allow failures on nightly julia
 # # (tests will run but not make your overall status red)
-# matrix:
-allow_failures:
-   - julia_version: nightly
+# matrix: ### ablaom says appveyor fails to parse following:
+# allow_failures:
+#   - julia_version: nightly
 
 branches:
   only:
