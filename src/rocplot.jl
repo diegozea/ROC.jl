@@ -1,15 +1,17 @@
-## Plotting ROC Curve
-
-## using Winston
-
-function plot(roc::ROCData) 
-	p = FramedPlot(
-	         aspect_ratio=1,
-	         xrange=(0,1),
-	         yrange=(0,1))
-	setattr(p.x1, label="FPR")
-	setattr(p.y1, label="TPR")
-	add(p, Curve(roc.FPR, roc.TPR) )
-	line = Slope(1, (0,0), kind="dotted")
-	add(p, line)
+@recipe function dummy(curve::ROCData)
+    xlim := (0,1)
+    ylim := (0,1)
+    xlab := "false positive rate"
+    ylab := "true positive rate"
+    title --> "Receiver Operator Characteristic"
+    @series begin
+        color --> :black
+        linestyle --> :dash
+        label := ""
+        [0, 1], [0, 1]
+    end
+    @series begin
+        curve.FPR, curve.TPR
+    end
 end
+

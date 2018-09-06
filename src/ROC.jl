@@ -1,17 +1,17 @@
+__precompile__()
 module ROC
 
-	using DataArrays
-	using Winston
+        using Missings,
+              RecipesBase # for creating a Plots.jl recipe
 
 	export	ROCData,
 		roc,
 		AUC,
 		PPV,
-		cutoffs,
-		plot
+		cutoffs
 
 	include("rocdata.jl")
-	include("roc_main.jl")
-	include("rocplot.jl")
+        include("roc_main.jl")
+        include("rocplot.jl")
 
 end # module
