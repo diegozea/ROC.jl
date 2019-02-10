@@ -2,15 +2,16 @@
 
 struct _PreparedROCData{T<:Real}
 	scores::Vector{T}
-	labels::BitVector
+	labels::AbstractVector{Bool}
 end
 
-function _create_preparedrocdata(scores, labels, reverseordered::Bool)
-	if reverseordered || issorted(scores,rev=true)
-		return( _PreparedROCData(scores,labels) )
+function _create_preparedrocdata(scores, labels, distancescored::Bool)
+	if distancescored
+        order = sortperm(scores,rev=false)
+		return( _PreparedROCData(scores[order],labels[order]) )
 	else
 		order = sortperm(scores,rev=true)
-		return( _PreparedROCData(scores[order], labels[order]) )
+		return( _PreparedROCData(scores[order],labels[order]) )
 	end
 end
 
@@ -22,9 +23,9 @@ function _vector2labels(labels, truelabel)
     end
 end
 
-function _preparedrocdata(scores, labels, reverseordered::Bool)
+function _preparedrocdata(scores, labels, distancescored)
 	if length(scores) == length(labels)
-		_create_preparedrocdata(scores,labels,reverseordered)
+		_create_preparedrocdata(scores,labels,distancescored)
 	else
 		error("scores and labels should have the same length")
 	end
@@ -32,7 +33,7 @@ end
 
 struct ROCData{T<:Real}
 	scores::Vector{T}
-	labels::BitVector
+	labels::AbstractVector{Bool}
 	P::Int
 	n::Int
 	N::Int
@@ -47,65 +48,66 @@ end
 
 function roc(_preparedrocdata::_PreparedROCData)
 	P = sum(_preparedrocdata.labels)
-	n = length(_preparedrocdata.labels)
+	n = length(_preparedrocdata.labels)+1
 	N = n - P
-	ni = 1:(n-1)
-	TP = Array{Int}(ni.stop)
-	TN = Array{Int}(ni.stop)
-	FP = Array{Int}(ni.stop)
-	FN = Array{Int}(ni.stop)
-	FPR = Array{Float64}(ni.stop)
-	TPR = Array{Float64}(ni.stop)
+	ni = 2:n
+    TP = fill(0,ni.stop)
+	TN = fill(0,ni.stop)
+	FP = fill(0,ni.stop)
+	FN = fill(0,ni.stop)
+	FPR = fill(0.0,ni.stop)
+	TPR = fill(0.0,ni.stop)
 	for i in ni
-		Pi = sum(_preparedrocdata.labels[1:i])
+        point = i-1
+		Pi = sum(_preparedrocdata.labels[1:point])
 		TP[i] = Pi
-		TN[i] = N - i + Pi
-		FP[i] =	i - Pi
+		TN[i] = N - point + Pi
+		FP[i] =	point - Pi
 		FN[i] = P - Pi
-		FPR[i] = ( i - Pi ) / N
+		FPR[i] = ( point - Pi ) / (N-1)
 		TPR[i] = Pi / P
 	end
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
 end
 
 # no missing values and bitvector labels:
-function roc(scores::AbstractVector{T}, labels::BitVector;
-             reverseordered::Bool=false) where T <: Real
-    return roc( _preparedrocdata(scores, labels, reverseordered) )
+function roc(scores::AbstractVector{T}, labels::AbstractVector{Bool};
+             distancescored::Bool=false) where T <: Real
+    return roc( _preparedrocdata(scores, labels, distancescored) )
 end
 
 # no missing values (but labels not bitvector):
 function roc(scores::AbstractVector{T}, labels::AbstractVector{L},
-             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+             truelabel::L; distancescored::Bool=false) where {T<:Real, L}
     bit_labels = _vector2labels(labels, truelabel)
-    return roc( _preparedrocdata(scores, bit_labels, reverseordered) )
+    return roc( _preparedrocdata(scores, bit_labels, distancescored) )
 end
 
 # missing labels:
 function roc(scores::AbstractVector{T}, labels::AbstractVector{Union{L, Missing}},
-             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+             truelabel::L; distancescored::Bool=false) where {T<:Real, L}
     good_indices = .!(ismissing.(labels))
     bit_labels = _vector2labels(labels[good_indices], truelabel)
     return roc( _preparedrocdata(scores[good_indices],
-                                 bit_labels, reverseordered) )
+                                 bit_labels, distancescored) )
 end
 
 # missing scores:
 function roc(scores::AbstractVector{Union{T,Missing}}, labels::AbstractVector{L},
-             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+             truelabel::L; distancescored::Bool=false) where {T<:Real, L}
     good_indices = .!(ismissing.(scores))
     bit_labels = _vector2labels(labels[good_indices], truelabel)
     return roc( _preparedrocdata([scores[good_indices]...],
-                                 bit_labels, reverseordered) )
+                                 bit_labels, distancescored) )
 end
 
 # missing labels and missing scores:
 function roc(scores::AbstractVector{Union{T,Missing}},
              labels::AbstractVector{Union{L,Missing}},
-             truelabel::L; reverseordered::Bool=false) where {T<:Real, L}
+             truelabel::L; distancescored::Bool=false) where {T<:Real, L}
     good_indices = .!( ismissing.(scores) .| ismissing.(labels) )
     bit_labels = _vector2labels(labels[good_indices], truelabel)
     return roc( _preparedrocdata([scores[good_indices]...],
-                                 bit_labels, reverseordered) )
+                                 bit_labels, distancescored) )
 end
 
