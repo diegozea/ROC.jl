@@ -1,8 +1,9 @@
 using ROC
-using Base.Test
+using Test
 using DataFrames
 using CSV
 using Missings
+using Random
 
 data = CSV.read("ROCRdata.csv")
 scores = data[1]
@@ -42,3 +43,4 @@ curve = roc(bad_scores, bad_labels, 1);
 bit_labels = BitVector(labels)
 curve = roc(scores, bit_labels);
 @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
+
