@@ -22,15 +22,17 @@ Pkg.clone("https://github.com/diegozea/ROC.jl.git")
 ### Use
 
 ```
-roc(scores::AbstractVector{T}, labels::AbstractVector{U}, truelabel::L; reverseordered::Bool=false)
+roc(scores::AbstractVector{T}, labels::AbstractVector{U}, truelabel::L; distancescored::Bool=false)
 ```
 
 Here `T` is `R` or `Union{R,Missing}` for some type `R<:Real` and `U`
 is `L` or `Union{L,Missing}` for some type `L<:Any`. The `labels`
 vector must take exactly two non-`missing` values.
 
+`distancescored` defines whether the `scores` values are distance-scored i.e. a higher score value means a larger difference. The default is `false` indicating the more typical case where a higher score value means a better match
+
 ```
-roc(scores::AbstractVector{R}, labels::BitVector; reverseordered::Bool=false)
+roc(scores::AbstractVector{R}, labels::AbstractVector{Bool}; distancescored::Bool=false)
 ```
 
 Alternative method for optimal performance (no `missing` values allowed).
