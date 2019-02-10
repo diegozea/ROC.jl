@@ -29,7 +29,7 @@ Here `T` is `R` or `Union{R,Missing}` for some type `R<:Real` and `U`
 is `L` or `Union{L,Missing}` for some type `L<:Any`. The `labels`
 vector must take exactly two non-`missing` values.
 
-`distancescored` defines whether the `scores` values are distance-scored i.e. a higher score value means a larger difference. The default is `false` indicating the more typical case where a higher score value means a better match
+`distancescored` defines whether the `scores` values are distance-scored i.e. a higher score value means a worse match. The default is `false` indicating the more typical opposite case where a higher score value means a better match
 
 ```
 roc(scores::AbstractVector{R}, labels::AbstractVector{Bool}; distancescored::Bool=false)
