@@ -15,7 +15,9 @@ scores = [scores...]
 labels = [labels...]
 
 # Correct bug on x86 where CSV.read() returns Int64 labels while typeof(1) = Int32
-labels = convert(typeof(1),labels)
+if typeof(labels[1]) != typeof(1)
+    labels = convert.(typeof(1),labels)
+end
 
 curve = roc(scores, labels, 1);
 
