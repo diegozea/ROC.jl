@@ -70,13 +70,13 @@ function roc(_preparedrocdata::_PreparedROCData)
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
 end
 
-# no missing values and bitvector labels:
+# no missing values and AbstractVector{Bool} labels:
 function roc(scores::AbstractVector{T}, labels::AbstractVector{Bool};
              distancescored::Bool=false) where T <: Real
     return roc( _preparedrocdata(scores, labels, distancescored) )
 end
 
-# no missing values (but labels not bitvector):
+# no missing values (but labels not AbstractVector{Bool}):
 function roc(scores::AbstractVector{T}, labels::AbstractVector{L},
              truelabel::L; distancescored::Bool=false) where {T<:Real, L}
     bit_labels = _vector2labels(labels, truelabel)
