@@ -48,7 +48,7 @@ end
 
 function roc(_preparedrocdata::_PreparedROCData)
 	P = sum(_preparedrocdata.labels)
-	n = length(_preparedrocdata.labels)+1
+	n = length(_preparedrocdata.labels)+1 # ROC curve has one more point than length of labels
 	N = n - P
 	ni = 1:n
 	TP = Array{Int}(undef,ni.stop)
@@ -58,13 +58,12 @@ function roc(_preparedrocdata::_PreparedROCData)
 	FPR = Array{Float64}(undef,ni.stop)
 	TPR = Array{Float64}(undef,ni.stop)
 	for i in ni
-        point = i-1
-		Pi = sum(_preparedrocdata.labels[1:point])
+		Pi = sum(_preparedrocdata.labels[1:i])
 		TP[i] = Pi
-		TN[i] = N - point + Pi
-		FP[i] =	point - Pi
+		TN[i] = N - i + Pi
+		FP[i] =	i - Pi
 		FN[i] = P - Pi
-		FPR[i] = ( point - Pi ) / (N-1)
+		FPR[i] = ( i - Pi ) / (N-1)
 		TPR[i] = Pi / P
 	end
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
