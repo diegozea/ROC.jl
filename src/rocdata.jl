@@ -63,7 +63,7 @@ function roc(_preparedrocdata::_PreparedROCData)
 		TN[i] = N - i + Pi
 		FP[i] =	i - Pi
 		FN[i] = P - Pi
-		FPR[i] = ( i - Pi ) / (N-1)
+		FPR[i] = ( i - Pi ) / N
 		TPR[i] = Pi / P
 	end
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
