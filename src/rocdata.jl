@@ -1,7 +1,7 @@
 ## Data Preparation for ROC Analysis
 
 struct _PreparedROCData{T<:Real}
-	scores::Vector{T}
+	scores::AbstractArray{T}
 	labels::Union{Vector{Bool},BitVector}
 end
 
@@ -58,12 +58,12 @@ function roc(_preparedrocdata::_PreparedROCData)
 	FPR = Array{Float64}(undef,ni.stop)
 	TPR = Array{Float64}(undef,ni.stop)
 	for i in ni
-		Pi = sum(_preparedrocdata.labels[1:i])
+        Pi =  (i == 1) ? 0 : sum(_preparedrocdata.labels[1:i-1])
 		TP[i] = Pi
-		TN[i] = N - i + Pi
-		FP[i] =	i - Pi
+		TN[i] = N - i - 1 + Pi
+		FP[i] =	i - 1 - Pi
 		FN[i] = P - Pi
-		FPR[i] = ( i - Pi ) / N
+		FPR[i] = ( i - 1 - Pi ) / (N-1)
 		TPR[i] = Pi / P
 	end
 	ROCData(_preparedrocdata.scores, _preparedrocdata.labels, P, n, N, ni, TP, TN, FP, FN, FPR, TPR)
