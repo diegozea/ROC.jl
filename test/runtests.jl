@@ -1,8 +1,9 @@
 using ROC
-using Base.Test
+using Test
 using DataFrames
 using CSV
 using Missings
+using Random
 
 data = CSV.read("ROCRdata.csv")
 scores = data[1]
