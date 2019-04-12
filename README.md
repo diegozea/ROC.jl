@@ -32,7 +32,7 @@ vector must take exactly two non-`missing` values.
 `distances` defines whether the `scores` values are distance-scored i.e. a higher score value means a worse match. The default is `false` indicating the more typical opposite case where a higher score value means a better match
 
 ```
-roc(scores::AbstractVector{R}, labels::AbstractVector{Bool}; distances::Bool=false)
+roc(scores::AbstractVector{R}, labels::BitVector{Bool}; distances::Bool=false)
 ```
 
 Alternative method for optimal performance (no `missing` values allowed).

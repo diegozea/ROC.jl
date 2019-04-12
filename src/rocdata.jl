@@ -1,8 +1,8 @@
 ## Data Preparation for ROC Analysis
 
 struct _PreparedROCData{T<:Real}
-	scores::AbstractVector{T}
-	labels::AbstractVector{Bool}
+	scores::Vector{T}
+	labels::Union{Vector{Bool},BitVector}
 end
 
 function _create_preparedrocdata(scores, labels, distances::Bool)
@@ -32,18 +32,18 @@ function _preparedrocdata(scores, labels, distances)
 end
 
 struct ROCData{T<:Real}
-	scores::AbstractVector{T}
-	labels::AbstractVector{Bool}
+	scores::Vector{T}
+	labels::Union{Vector{Bool},BitVector}
 	P::Int
 	n::Int
 	N::Int
 	ni::UnitRange{Int}
-	TP::AbstractVector{Int}
-	TN::AbstractVector{Int}
-	FP::AbstractVector{Int}
-	FN::AbstractVector{Int}
-	FPR::AbstractVector{Float64}
-	TPR::AbstractVector{Float64}
+	TP::Vector{Int}
+	TN::Vector{Int}
+	FP::Vector{Int}
+	FN::Vector{Int}
+	FPR::Vector{Float64}
+	TPR::Vector{Float64}
 end
 
 function roc(_preparedrocdata::_PreparedROCData)
