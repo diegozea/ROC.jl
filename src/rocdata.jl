@@ -13,10 +13,10 @@ function _create_preparedrocdata(scores::AbstractVector{T},
 	thresholds = unique(scores)
 	if distances
 		sort!(thresholds, rev=false)
-		push!(typemax(T))
+		push!(thresholds, typemax(T))
 	else
 		sort!(thresholds, rev=true)
-		push!(typemin(T))
+		push!(thresholds, typemin(T))
 	end
 	_PreparedROCData(
 		convert(Vector{T}, scores),
@@ -29,7 +29,7 @@ function _vector2labels(labels::AbstractVector{T}, truelabel::T) where T
 	binary = Vector{Bool}(undef, length(labels))
 	unique_labels = Set{T}()
 	for (i, label) in enumerate(labels)
-		push!(labels)
+		push!(unique_labels, label)
 		if length(unique_labels) > 2
 			error("There is more than two labels.")
 		end
@@ -53,7 +53,7 @@ struct ROCData{T<:Real}
 	scores::Vector{T}
 	labels::Union{Vector{Bool},BitVector}
 	thresholds::Vector{T}
-	P::Int
+	P::T
 	N::Int
 	TP::Vector{Int}
 	TN::Vector{Int}
@@ -66,14 +66,14 @@ end
 function roc(data::_PreparedROCData)
 	P = sum(data.labels)
 	N = length(data.labels) - P
-	n_thresholds = data.thresholds
+	n_thresholds = length(data.thresholds)
 	TP = Array{Int}(undef, n_thresholds)
 	TN = Array{Int}(undef, n_thresholds)
 	FP = Array{Int}(undef, n_thresholds)
 	FN = Array{Int}(undef, n_thresholds)
 	FPR = Array{Float64}(undef, n_thresholds)
 	TPR = Array{Float64}(undef, n_thresholds)
-	for (i, threshold) in enumerate(data.threshold)
+	for (i, threshold) in enumerate(data.thresholds)
 		if data.distances
 			mask = data.scores .<= threshold
 		else
@@ -90,7 +90,10 @@ function roc(data::_PreparedROCData)
 		FPR[i] = FP[i] / (FP[i] + TNi)
 		TPR[i] = TPi / (TPi + FN[i])
 	end
-	ROCData(data.scores, data.labels, P, N, TP, TN, FP, FN, FPR, TPR)
+	ROCData{eltype(data.scores)}(
+		data.scores,
+		data.labels,
+		data.thresholds, P, N, TP, TN, FP, FN, FPR, TPR)
 end
 
 # no missing values and AbstractVector{Bool} labels:
