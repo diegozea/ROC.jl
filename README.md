@@ -1,4 +1,4 @@
-![The Book of Knowledge, The Grolier Society, 1911](https://dl.dropboxusercontent.com/u/6948655/ROC.jpg)
+![Roc destroying Sindbad's ship from The Book of Knowledge, The Grolier Society, 1911](https://drive.google.com/open?id=1NWx45ffjYZXWtZCyjMq75rsVyc8NL9jp)
 
 Linux, OSX: [![Build Status](https://travis-ci.org/diegozea/ROC.jl.svg)](https://travis-ci.org/diegozea/ROC.jl)
 
@@ -40,7 +40,7 @@ Alternative method for optimal performance (no `missing` values allowed).
 
 The methods above return a `ROCData` object, whose fields `FPR` and
 `TPR` are the vectors of true positive and false positive rates,
-respectively. 
+respectively.
 
 ```
 AUC(curve::ROCData)
@@ -100,6 +100,3 @@ julia> plot!(roc_bad, label="bad")
 ````
 
 This generates the plot appearing at the top of the page.
-
-
-
