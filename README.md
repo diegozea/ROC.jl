@@ -1,4 +1,4 @@
-# ROC.jl    
+# ROC    
   
 ![Roc destroying Sindbad's ship from The Book of Knowledge, The Grolier Society, 1911](docs/src/assets/ROC.jpg)    
 
@@ -6,7 +6,7 @@ Linux, OSX: [![Build Status](https://travis-ci.org/diegozea/ROC.jl.svg)](https:/
 Windows: [![Build status](https://ci.appveyor.com/api/projects/status/0v9fnq2s3w2xnggj/branch/master?svg=true)](https://ci.appveyor.com/project/diegozea/roc-jl/branch/master)  
 Code Coverage: [![Coverage Status](https://coveralls.io/repos/diegozea/ROC.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/diegozea/ROC.jl?branch=master) [![codecov.io](http://codecov.io/github/diegozea/ROC.jl/coverage.svg?branch=master)](http://codecov.io/github/diegozea/ROC.jl?branch=master)
 
-An implementation of [ROC curves](http://en.wikipedia.org/wiki/Receiver_operating_characteristic) for [Julia](http://julialang.org/).
+An implementation of [ROC (Receiver Operating Characteristic) curves](http://en.wikipedia.org/wiki/Receiver_operating_characteristic) for [Julia](http://julialang.org/).
 
 ![](docs/src/assets/rocs.png)
 
