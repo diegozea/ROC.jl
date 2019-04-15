@@ -14,6 +14,11 @@ labels = data[2]
 scores = [scores...]
 labels = [labels...]
 
+# Correct bug on x86 where CSV.read() returns Int64 labels while typeof(1) = Int32
+if typeof(labels[1]) != typeof(1)
+    labels = convert.(typeof(1),labels)
+end
+
 curve = roc(scores, labels, 1);
 
 @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
@@ -43,3 +48,4 @@ curve = roc(bad_scores, bad_labels, 1);
 bit_labels = BitVector(labels)
 curve = roc(scores, bit_labels);
 @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
+
