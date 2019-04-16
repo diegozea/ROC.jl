@@ -10,7 +10,7 @@ scores = data[1]
 labels = data[2]
 
 
-# purify types incorrectly parsed by CSV.read as Union{T,Missing}:
+# purify types incorrectly parsed by CSV.read as Union{T, Missing}:
 scores = [scores...]
 labels = [labels...]
 
@@ -49,3 +49,12 @@ bit_labels = BitVector(labels)
 curve = roc(scores, bit_labels);
 @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
 
+@testset "ROC analysis: web-based calculator for ROC curves' example" begin
+    scores = [1 , 2 , 3 , 4 , 6 , 5 , 7 , 8 , 9 , 10]
+    labels = [0 , 0 , 0 , 0 , 0 , 1 , 1 , 1 , 1 , 1]
+    res = roc(scores, labels, 1)
+
+    @test AUC(res) ≈ 0.96
+    @test res.TPR == [0.0, 0.2, 0.4, 0.6, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0]
+    @test res.FPR == [0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.4, 0.6, 0.8, 1.0]
+end
