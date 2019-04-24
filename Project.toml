@@ -1,0 +1,16 @@
+name = "ROC"
+uuid = "e4f92426-8875-4712-a903-a153c75bec82"
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[targets]
+test = ["Test","Random"]
