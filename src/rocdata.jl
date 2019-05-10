@@ -11,7 +11,7 @@ function _create_preparedrocdata(scores::AbstractVector{T},
 								 labels,
 								 distances::Bool) where {T <: Real}
 	thresholds = unique(scores)
-	push!(thresholds, typemax(T))
+	push!(thresholds, distances ? typemin(T) : typemax(T))
 	sort!(thresholds, rev=!distances)
 	_PreparedROCData(
 		convert(Vector{T}, scores),

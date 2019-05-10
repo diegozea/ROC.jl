@@ -58,3 +58,55 @@ curve = roc(scores, bit_labels);
     @test res.TPR == [0.0, 0.2, 0.4, 0.6, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0]
     @test res.FPR == [0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.4, 0.6, 0.8, 1.0]
 end
+
+@testset "Ties" begin
+    # Example from https://www.epeter-stats.de/roc-curves-and-ties/
+    # This package uses the first strategy, i.e.  AUC is equivalent to the
+    # Mann-Whitney U statistic
+
+    label = vcat([true for _ in 1:1000], [false for _ in 1:1000])
+    pred = vcat(rand(7:14, 1000), rand(1:8, 1000))
+    roc_data = roc(pred, label)
+    @test round(AUC(roc_data), digits=2) == 0.97
+
+
+    # Example from https://github.com/brian-lau/MatlabAUC/issues/1
+    data = [-1 1; 1 2; -1 3; -1 4; 1 5; -1 6; 1 7; -1 8; 1 9; 1 10;
+            1 11; -1 13; 1 13; 1 14; 1 14]
+    roc_data = roc(data[:,2], data[:,1], 1)
+    spss = [1.000 1.000
+            1.000 .833
+             .889 .833
+             .889 .667
+             .889 .500
+             .778 .500
+             .778 .333
+             .667 .333
+             .667 .167
+             .556 .167
+             .444 .167
+             .333 .167
+             .222 .000
+             .000 .000]
+    @test size(spss, 1) == length(roc_data.TPR)
+    @test size(spss, 1) == length(roc_data.FPR)
+    for i in 1:size(spss, 1)
+        @test isapprox(roc_data.TPR[end - i + 1], spss[i, 1], atol=1e-3)
+        @test isapprox(roc_data.FPR[end - i + 1], spss[i, 2], atol=1e-3)
+    end
+end
+
+@testset "Distances and Ties" begin
+
+    labels = Bool[false, true, false, false, true, false, true, false, true,
+                  true, true, false, true, true, true]
+    normal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 13, 14, 14] # 14 is better
+    distances = 14 .- normal # 0 is better
+    roc_normal = roc(normal, labels)
+    roc_distances = roc(distances, labels, distances=true)
+
+    # Same ROC curve:
+    @test roc_normal.TPR ≈ roc_distances.TPR
+    @test roc_normal.FPR ≈ roc_distances.FPR
+    @test AUC(roc_normal) ≈ AUC(roc_distances)
+end
