@@ -1,18 +1,17 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
 os:
   - linux
   - osx
-sudo: required
 julia:
   - 1.0
-  - 1.1
   - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
+  fast_finish: true
 notifications:
   email: false
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ROC"); Pkg.test("ROC"; coverage=true)'
-
-# after_success:
-#   - julia -e 'cd(Pkg.dir("ROC")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(Codecov.process_folder())'
-
+after_success:
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
