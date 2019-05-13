@@ -1,5 +1,5 @@
 # ROC    
-  
+
 ![Roc destroying Sindbad's ship from The Book of Knowledge, The Grolier Society, 1911](docs/src/assets/ROC.jpg)    
 
 Linux, OSX: [![Build Status](https://travis-ci.org/diegozea/ROC.jl.svg)](https://travis-ci.org/diegozea/ROC.jl)  
@@ -90,7 +90,6 @@ Use `Plots.jl` to plot the receiver operator characteristics:
 
 ````julia
 julia> using Plots
-julia> pyplot() # python backend
 
 julia> plot(roc_good, label="good");
 julia> plot!(roc_bad, label="bad")

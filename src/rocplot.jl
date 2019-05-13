@@ -14,4 +14,3 @@
         curve.FPR, curve.TPR
     end
 end
-
