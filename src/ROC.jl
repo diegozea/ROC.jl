@@ -1,8 +1,8 @@
-__precompile__()
 module ROC
 
-using 	Missings,
-		RecipesBase # for creating a Plots.jl recipe
+using Infinity
+using Missings # to use Missings.T
+using RecipesBase # for creating a Plots.jl recipe
 
 export	ROCData,
 		roc,

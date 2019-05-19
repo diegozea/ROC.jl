@@ -1,54 +1,8 @@
 ## Data Preparation for ROC Analysis
 
-struct _PreparedROCData{T<:Real}
-	scores::Vector{T}
-	labels::Vector{Bool}
+struct ROCData{T <: Real}
 	thresholds::Vector{T}
-	distances::Bool
-end
-
-function _create_preparedrocdata(scores::AbstractVector{T},
-								 labels,
-								 distances::Bool) where {T <: Real}
-	thresholds = unique(scores)
-	push!(thresholds, distances ? typemin(T) : typemax(T))
-	sort!(thresholds, rev=!distances)
-	_PreparedROCData(
-		convert(Vector{T}, scores),
-		convert(Vector{Bool}, labels),
-		convert(Vector{T}, thresholds),
-		distances)
-end
-
-function _vector2labels(labels::AbstractVector{T}, truelabel::T) where T
-	binary = Vector{Bool}(undef, length(labels))
-	unique_labels = Set{T}()
-	for (i, label) in enumerate(labels)
-		push!(unique_labels, label)
-		if length(unique_labels) > 2
-			error("There is more than two labels.")
-		end
-		binary[i] = label == truelabel
-	end
-	if !(truelabel in unique_labels)
-		error("The truelabel is not in labels.")
-	end
-	binary
-end
-
-function _preparedrocdata(scores, labels, distances)
-	if length(scores) == length(labels)
-		_create_preparedrocdata(scores,labels,distances)
-	else
-		error("scores and labels should have the same length")
-	end
-end
-
-struct ROCData{T<:Real}
-	scores::Vector{T}
-	labels::Union{Vector{Bool},BitVector}
-	thresholds::Vector{T}
-	P::T
+	P::Int
 	N::Int
 	TP::Vector{Int}
 	TN::Vector{Int}
@@ -58,24 +12,59 @@ struct ROCData{T<:Real}
 	TPR::Vector{Float64}
 end
 
-function roc(data::_PreparedROCData)
-	P = sum(data.labels)
-	N = length(data.labels) - P
-	n_thresholds = length(data.thresholds)
+function _thresholds(used_scores, distances::Bool)
+	unique_scores = unique(used_scores)
+	if distances
+		push!(unique_scores, -∞)
+		sort!(unique_scores, rev=false)
+	else
+		push!(unique_scores, ∞)
+		sort!(unique_scores, rev=true)
+	end
+end
+
+_is_valid_score(score) = isa(score, Number) ? !isnan(score) : false
+
+function _prepare_data(scores, labels, distances::Bool, is_positive::Function)
+	n_labels = length(labels)
+	if length(scores) != n_labels
+		throw(ArgumentError("scores and labels should have the same length."))
+	end
+	bit_labels = falses(n_labels)
+	used_scores_type = promote_type(Missings.T(eltype(scores)), Infinite)
+	used_scores = Vector{used_scores_type}(undef, n_labels)
+	n_used = 0
+	for (score, label) in zip(scores, labels)
+		if _is_valid_score(score) && !ismissing(label)
+			n_used += 1
+			@inbounds bit_labels[n_used] = is_positive(label)
+			@inbounds used_scores[n_used] = score
+		end
+	end
+	resize!(bit_labels, n_used)
+	resize!(used_scores, n_used)
+	thresholds = _thresholds(used_scores, distances)
+	(scores=used_scores, labels=bit_labels, thresholds=thresholds)
+end
+
+function _roc(scores, labels, thresholds, distances)
+	P = sum(labels)
+	N = length(labels) - P
+	n_thresholds = length(thresholds)
 	TP = Array{Int}(undef, n_thresholds)
 	TN = Array{Int}(undef, n_thresholds)
 	FP = Array{Int}(undef, n_thresholds)
 	FN = Array{Int}(undef, n_thresholds)
 	FPR = Array{Float64}(undef, n_thresholds)
 	TPR = Array{Float64}(undef, n_thresholds)
-	for (i, threshold) in enumerate(data.thresholds)
-		if data.distances
-			mask = data.scores .<= threshold
+	for (i, threshold) in enumerate(thresholds)
+		if distances
+			mask = scores .<= threshold
 		else
-			mask = data.scores .>= threshold
+			mask = scores .>= threshold
 		end
-		predicted_positive = data.labels[mask]
-		predicted_negative = data.labels[.!mask]
+		predicted_positive = labels[mask]
+		predicted_negative = labels[.!mask]
 		TPi = sum(predicted_positive)
 		TNi = sum(.!predicted_negative)
         TP[i] = TPi
@@ -85,49 +74,47 @@ function roc(data::_PreparedROCData)
 		FPR[i] = FP[i] / (FP[i] + TNi)
 		TPR[i] = TPi / (TPi + FN[i])
 	end
-	ROCData{eltype(data.scores)}(
-		data.scores,
-		data.labels,
-		data.thresholds, P, N, TP, TN, FP, FN, FPR, TPR)
+	ROCData{eltype(thresholds)}(thresholds, P, N, TP, TN, FP, FN, FPR, TPR)
 end
 
-# no missing values and AbstractVector{Bool} labels:
-function roc(scores::AbstractVector{T}, labels::AbstractVector{Bool};
-             distances::Bool=false) where T <: Real
-    return roc( _preparedrocdata(scores, labels, distances) )
+function roc(scores, labels, is_positive::Function; distances::Bool=false)
+	data =  _prepare_data(scores, labels, distances, is_positive)
+	_roc(data.scores, data.labels, data.thresholds, distances)
 end
 
-# no missing values (but labels not AbstractVector{Bool}):
-function roc(scores::AbstractVector{T}, labels::AbstractVector{L},
-             truelabel::L; distances::Bool=false) where {T<:Real, L}
-    bit_labels = _vector2labels(labels, truelabel)
-    return roc( _preparedrocdata(scores, bit_labels, distances) )
+function roc(scores, labels, positive_label; distances::Bool=false)
+	roc(scores, labels, ==(positive_label); distances=distances)
 end
 
-# missing labels:
-function roc(scores::AbstractVector{T}, labels::AbstractVector{Union{L, Missing}},
-             truelabel::L; distances::Bool=false) where {T<:Real, L}
-    good_indices = .!(ismissing.(labels))
-    bit_labels = _vector2labels(labels[good_indices], truelabel)
-    return roc( _preparedrocdata(scores[good_indices],
-                                 bit_labels, distances) )
+function _get_positive_label(labels)
+	unique_labels = unique(skipmissing(labels))
+	try
+		sort!(unique_labels)
+	catch err
+		if isa(err, MethodError)
+			@warn "$unique_labels cannot be sorted. Positive: The last element."
+		else
+			rethrow(err)
+		end
+	end
+	n_labels = length(unique_labels)
+	if n_labels == 0
+		throw(ArgumentError("There are not unique labels."))
+	end
+	positive = unique_labels[end]
+	if n_labels == 1
+		@warn "There is only one unique label. Positive: $positive"
+	elseif n_labels > 2
+		@warn "There are more than two unique labels. Positive: $positive"
+	end
+	positive
 end
 
-# missing scores:
-function roc(scores::AbstractVector{Union{T,Missing}}, labels::AbstractVector{L},
-             truelabel::L; distances::Bool=false) where {T<:Real, L}
-    good_indices = .!(ismissing.(scores))
-    bit_labels = _vector2labels(labels[good_indices], truelabel)
-    return roc( _preparedrocdata([scores[good_indices]...],
-                                 bit_labels, distances) )
-end
-
-# missing labels and missing scores:
-function roc(scores::AbstractVector{Union{T,Missing}},
-             labels::AbstractVector{Union{L,Missing}},
-             truelabel::L; distances::Bool=false) where {T<:Real, L}
-    good_indices = .!( ismissing.(scores) .| ismissing.(labels) )
-    bit_labels = _vector2labels(labels[good_indices], truelabel)
-    return roc( _preparedrocdata([scores[good_indices]...],
-                                 bit_labels, distances) )
+function roc(scores, labels; distances::Bool=false)
+	if Missings.T(eltype(labels)) === Bool
+		roc(scores, labels, identity; distances=distances)
+	else
+		positive =  _get_positive_label(labels)
+		roc(scores, labels, ==(positive); distances=distances)
+	end
 end

@@ -1,6 +1,5 @@
 ## ROC Analysis
 
-
 function AUC(roc::ROCData)
 	auc=zero(Float64)
 	for i in 2:length(roc.thresholds)
@@ -35,4 +34,4 @@ end
 PPV(roc::ROCData) = roc.TP ./ 1:length(roc.thresholds)
 PPV(roc::ROCData,n::Int) = roc.TP[1:length(roc.thresholds) .== n ] / n
 
-cutoffs(roc::ROCData) = roc.scores[1:length(roc.thresholds)]
+cutoffs(roc::ROCData) = roc.thresholds
