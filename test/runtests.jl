@@ -6,7 +6,7 @@ using Random
 
 
 @testset "ROCR data" begin
-    data = CSV.read(joinpath(@__FILE__, "..", "data", "ROCRdata.csv"))
+    data = CSV.read(joinpath(@__DIR__, "data", "ROCRdata.csv"))
     scores = data[:predictions]
     labels = data[:labels]
 
