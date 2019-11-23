@@ -26,7 +26,9 @@ Here `T` is `R` or `Union{R,Missing}` for some type `R<:Real` and `U`
 is `L` or `Union{L,Missing}` for some type `L<:Any`. The `labels`
 vector must take exactly two non-`missing` values.
 
-`distances` defines whether the `scores` values are distance-scored i.e. a higher score value means a worse match. The default is `false` indicating the more typical opposite case where a higher score value means a better match
+`distances` defines whether the `scores` values are distance-scored, i.e. a
+higher score value means a worse match. The default is `false` indicating the
+more typical opposite case where a higher score value means a better match
 
 ```julia
 roc(scores::AbstractVector{R}, labels::BitVector{Bool}; distances::Bool=false)
@@ -36,7 +38,7 @@ Alternative method for optimal performance (no `missing` values allowed).
 
 
 The methods above return a `ROCData` object, whose fields `FPR` and
-`TPR` are the vectors of true positive and false positive rates,
+`TPR` are the vectors of true and false positive rates,
 respectively.
 
 ```julia
@@ -48,6 +50,7 @@ Area under the curve.
 ```julia
 PPV(curve::ROCData)
 ```
+
 Positive predictive value.
 
 
