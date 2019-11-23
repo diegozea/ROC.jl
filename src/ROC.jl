@@ -1,7 +1,7 @@
 module ROC
 
 using Infinity
-using Missings # to use Missings.T
+using Missings # to use Missings.nonmissingtype
 using RecipesBase # for creating a Plots.jl recipe
 
 export	ROCData,

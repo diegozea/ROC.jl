@@ -31,7 +31,7 @@ function _prepare_data(scores, labels, distances::Bool, is_positive::Function)
 		throw(ArgumentError("scores and labels should have the same length."))
 	end
 	bit_labels = falses(n_labels)
-	used_scores_type = promote_type(Missings.T(eltype(scores)), Infinite)
+	used_scores_type = promote_type(Missings.nonmissingtype(eltype(scores)), Infinite)
 	used_scores = Vector{used_scores_type}(undef, n_labels)
 	n_used = 0
 	for (score, label) in zip(scores, labels)
@@ -111,7 +111,7 @@ function _get_positive_label(labels)
 end
 
 function roc(scores, labels; distances::Bool=false)
-	if Missings.T(eltype(labels)) === Bool
+	if Missings.nonmissingtype(eltype(labels)) === Bool
 		roc(scores, labels, identity; distances=distances)
 	else
 		positive =  _get_positive_label(labels)

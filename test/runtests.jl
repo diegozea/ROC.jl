@@ -7,8 +7,8 @@ using Random
 
 @testset "ROCR data" begin
     data = CSV.read(joinpath(@__DIR__, "data", "ROCRdata.csv"))
-    scores = data[:predictions]
-    labels = data[:labels]
+    scores = data[!, :predictions]
+    labels = data[!, :labels]
 
     curve = roc(scores, labels)
     @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
@@ -26,6 +26,11 @@ using Random
 
     @testset "BitVector" begin
         curve = roc(scores, BitVector(labels))
+        @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
+    end
+
+    @testset "Distances" begin
+        curve = roc(1.0 .- scores, labels, distances=true)
         @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
     end
 end
