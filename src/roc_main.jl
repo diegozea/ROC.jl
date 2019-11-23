@@ -10,9 +10,9 @@ function AUC(roc::ROCData)
 	auc
 end
 
-function AUC(roc::ROCData,FPRstop::Float64)
+function AUC(roc::ROCData, FPRstop::Float64)
 	auc=zero(Float64)
-	if FPRstop <= 0 || FPRstop >= 1
+	if FPRstop <= 0.0 || FPRstop >= 1.0
 		error("FPRstop should be in (0,1)")
 	end
 	for i in 2:length(roc.thresholds)
