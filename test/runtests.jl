@@ -4,6 +4,16 @@ using CSV
 using Test
 using Random
 
+@testset "Input checks" begin
+    scores = [1, 2, 3]
+    labels = ['a', 'b', 'b']
+
+    @test_throws ArgumentError roc(scores, ['a', 'b'])
+
+    curve = roc(scores, labels)
+    @test_throws ErrorException AUC(curve, 0.0)
+    @test_throws ErrorException AUC(curve, 1.0)
+end
 
 @testset "ROCR data" begin
     data = CSV.read(joinpath(@__DIR__, "data", "ROCRdata.csv"))
@@ -26,7 +36,7 @@ using Random
 
     @testset "BitVector" begin
         curve = roc(scores, BitVector(labels))
-        
+
         @test abs( AUC(curve) - 0.834187 ) < 0.000001 # ROCR 0.8341875
     end
 
